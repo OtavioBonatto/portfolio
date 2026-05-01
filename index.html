@@ -1,0 +1,723 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Otávio Bonatto — Dev & Game Creator</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=Syne:wght@300;400;600&display=swap" rel="stylesheet"/>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg: #09090B;
+  --surface: #111114;
+  --border: #2A2A30;
+  --text: #F0EEE8;
+  --muted: #8A8890; /* Ligeiramente mais claro para melhor contraste */
+  --gold: #C9A86C;
+  --gold2: #E8C98A;
+  --glow: rgba(201,168,108,0.12);
+}
+html{scroll-behavior:smooth}
+body{background:var(--bg);color:var(--text);font-family:'Syne',sans-serif;font-weight:300;overflow-x:hidden}
+
+/* Noise overlay para dar textura premium ao fundo */
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E");
+  opacity: 0.025;
+  pointer-events: none;
+  z-index: 0;
+}
+
+/* SISTEMA DE IDIOMAS */
+body.lang-en .pt { display: none !important; }
+body.lang-pt .en { display: none !important; }
+
+/* CURSOR */
+.cursor{position:fixed;width:8px;height:8px;background:var(--gold);border-radius:50%;pointer-events:none;z-index:9999;transform:translate(-50%,-50%);transition:width .3s,height .3s, background-color .3s}
+.cursor-ring{position:fixed;width:36px;height:36px;border:1px solid rgba(201,168,108,0.4);border-radius:50%;pointer-events:none;z-index:9998;transform:translate(-50%,-50%); transition: border-color 0.3s;}
+
+/* NAV */
+nav{position:fixed;top:0;left:0;right:0;z-index:100;display:flex;justify-content:space-between;align-items:center;padding:1.5rem 3.5rem;transition:border-color .3s,background .3s}
+nav.scrolled{border-bottom:1px solid var(--border);background:rgba(9,9,11,0.85);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);}
+.nav-logo{font-family:'Playfair Display',serif;font-size:1.15rem;letter-spacing:.04em;position:relative;z-index:1}
+.nav-logo span{color:var(--gold)}
+.nav-links{display:flex;gap:2.5rem;list-style:none}
+.nav-links a{text-decoration:none;color:var(--muted);font-size:.78rem;letter-spacing:.12em;text-transform:uppercase;transition:color .2s;position:relative}
+.nav-links a::after{content:'';position:absolute;bottom:-4px;left:0;width:0;height:1px;background:var(--gold);transition:width .3s}
+.nav-links a:hover{color:var(--gold)}
+.nav-links a:hover::after{width:100%}
+
+.nav-right{display:flex;align-items:center;gap:2rem;position:relative;z-index:1}
+.nav-dot-wrap{display:flex;align-items:center;gap:.5rem;font-size:.72rem;letter-spacing:.08em;color:var(--muted)}
+.nav-dot{width:6px;height:6px;border-radius:50%;background:#4CAF50;box-shadow:0 0 6px #4CAF50;animation:pdot 2s infinite}
+@keyframes pdot{0%,100%{opacity:1}50%{opacity:.4}}
+
+/* Botão de Idioma */
+.lang-toggle {
+  background: transparent;
+  border: 1px solid var(--border);
+  color: var(--muted);
+  border-radius: 20px;
+  padding: 0.35rem 0.8rem;
+  font-family: 'Syne', sans-serif;
+  font-size: 0.65rem;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  cursor: pointer;
+  transition: all 0.3s;
+  display: flex;
+  align-items: center;
+  gap: 0.3rem;
+}
+.lang-toggle:hover { border-color: var(--gold); }
+.lang-toggle span { transition: color 0.3s; }
+.lang-toggle span.active { color: var(--gold); }
+
+/* HERO */
+.hero{min-height:100vh;display:flex;flex-direction:column;justify-content:center;padding:0 3.5rem;position:relative;overflow:hidden}
+.hero-grid{position:absolute;inset:0;background-image:linear-gradient(rgba(201,168,108,.04) 1px,transparent 1px),linear-gradient(90deg,rgba(201,168,108,.04) 1px,transparent 1px);background-size:80px 80px;mask-image:radial-gradient(ellipse 80% 80% at 60% 50%,black,transparent)}
+.hero-glow{position:absolute;top:15%;right:8%;width:600px;height:600px;background:radial-gradient(circle,rgba(201,168,108,.08) 0%,transparent 70%);pointer-events:none; filter:blur(40px);}
+.hero-content{position:relative;z-index:1;max-width:850px}
+.hero-eyebrow{display:flex;align-items:center;gap:1rem;margin-bottom:2rem;opacity:0;animation:fup 1s .2s forwards}
+.eyebrow-line{width:40px;height:1px;background:var(--gold)}
+.hero-eyebrow span{font-size:.72rem;letter-spacing:.18em;text-transform:uppercase;color:var(--gold)}
+.hero h1{font-family:'Playfair Display',serif;font-size:clamp(3.5rem,7vw,7rem);line-height:1.02;margin-bottom:2rem;opacity:0;animation:fup 1s .35s forwards}
+
+/* Degradê premium nas tags em (itálico) */
+em { font-style:italic; background: linear-gradient(135deg, var(--gold2), var(--gold)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+
+.hero h1 .outline{-webkit-text-stroke:1px rgba(240,238,232,.2);color:transparent}
+.hero-sub{font-size:1rem;color:var(--muted);max-width:540px;line-height:1.9;margin-bottom:3rem;opacity:0;animation:fup 1s .5s forwards}
+.hero-actions{display:flex;gap:1.5rem;align-items:center;opacity:0;animation:fup 1s .65s forwards}
+
+.btn-primary{display:inline-flex;align-items:center;gap:.75rem;background:var(--gold);color:#09090B;padding:.9rem 2rem;font-size:.8rem;font-family:'Syne',sans-serif;letter-spacing:.1em;text-transform:uppercase;font-weight:600;text-decoration:none;border:none;cursor:pointer;transition:all .3s}
+.btn-primary:hover{background:var(--gold2);transform:translateY(-3px);box-shadow:0 10px 25px rgba(201,168,108,.25)}
+.btn-ghost{display:inline-flex;align-items:center;gap:.5rem;color:var(--text);font-size:.8rem;letter-spacing:.1em;text-transform:uppercase;text-decoration:none;border-bottom:1px solid var(--border);padding-bottom:2px;transition:color .2s,border-color .2s}
+.btn-ghost:hover{color:var(--gold);border-color:var(--gold)}
+
+.hero-scroll{position:absolute;bottom:2.5rem;left:50%;transform:translateX(-50%);display:flex;flex-direction:column;align-items:center;gap:.5rem;opacity:0;animation:fup 1s 1s forwards}
+.hero-scroll span{font-size:.63rem;letter-spacing:.15em;text-transform:uppercase;color:var(--muted)}
+.scroll-line{width:1px;height:48px;background:linear-gradient(var(--gold),transparent);animation:sdown 2s infinite}
+@keyframes sdown{0%{transform:scaleY(0);transform-origin:top}50%{transform:scaleY(1);transform-origin:top}51%{transform-origin:bottom}100%{transform:scaleY(0);transform-origin:bottom}}
+
+/* MARQUEE */
+.marquee-wrap{border-top:1px solid var(--border);border-bottom:1px solid var(--border);overflow:hidden;padding:.85rem 0;background:var(--surface)}
+.marquee-inner{display:flex;gap:3rem;width:max-content;animation:mq 35s linear infinite}
+.marquee-inner span{font-size:.68rem;letter-spacing:.2em;text-transform:uppercase;color:var(--muted);white-space:nowrap;display:flex;align-items:center;gap:1rem}
+.marquee-inner span::after{content:'◆';color:var(--gold);font-size:.45rem}
+@keyframes mq{from{transform:translateX(0)}to{transform:translateX(-50%)}}
+
+/* SECTION LABELS */
+section{position:relative;z-index:1}
+.slabel{display:flex;align-items:center;gap:1rem;margin-bottom:1.2rem}
+.slabel-num{font-size:.68rem;color:var(--gold);letter-spacing:.1em}
+.slabel-line{flex:1;max-width:40px;height:1px;background:var(--border)}
+.slabel-text{font-size:.68rem;letter-spacing:.16em;text-transform:uppercase;color:var(--muted)}
+.stitle{font-family:'Playfair Display',serif;font-size:clamp(2.2rem,4vw,3.5rem);line-height:1.1;margin-bottom:3.5rem}
+
+/* ABOUT */
+.about{display:grid;grid-template-columns:1fr 1fr;gap:6rem;align-items:center;padding:8rem 3.5rem;position:relative}
+.about-glow{position:absolute;top:50%;left:-10%;width:500px;height:500px;background:radial-gradient(circle,rgba(201,168,108,.05) 0%,transparent 70%);pointer-events:none; filter:blur(50px);}
+.about-text p{color:var(--muted);line-height:1.9;font-size:.95rem;margin-bottom:1.5rem}
+.about-text strong{color:var(--text); font-weight:600;}
+.acard{background:var(--surface);border:1px solid var(--border);padding:3rem;position:relative;overflow:hidden; transition:border-color 0.4s, box-shadow 0.4s;}
+.acard:hover {border-color: rgba(201,168,108,0.3); box-shadow: 0 15px 40px rgba(0,0,0,0.4);}
+.acard::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,transparent,var(--gold),transparent)}
+.acard-label{font-size:.63rem;letter-spacing:.18em;text-transform:uppercase;color:var(--muted);margin-bottom:2rem}
+.stats-grid{display:grid;grid-template-columns:1fr 1fr;gap:1.5rem;margin-bottom:2rem}
+.stat-num{font-family:'Playfair Display',serif;font-size:2.8rem;color:var(--gold);line-height:1}
+.stat-num sup{font-size:1rem;vertical-align:super}
+.stat-label{font-size:.7rem;color:var(--muted);margin-top:.3rem}
+.adivider{height:1px;background:var(--border);margin:2rem 0}
+.tags{display:flex;flex-wrap:wrap;gap:.5rem}
+.tag{padding:.3rem .8rem;border:1px solid var(--border);font-size:.7rem;letter-spacing:.05em;color:var(--muted);transition:all .3s;cursor:default; border-radius:4px;}
+.tag:hover{border-color:var(--gold);color:var(--gold); background:rgba(201,168,108,0.05);}
+
+/* SKILLS */
+.skills-sec{padding:6rem 3.5rem;background:var(--surface);border-top:1px solid var(--border);border-bottom:1px solid var(--border)}
+.skills-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:1.5rem}
+.skill-card{padding:2.5rem 2rem;border:1px solid var(--border);background:var(--bg);position:relative;overflow:hidden;transition:all .4s;cursor:default; border-radius: 6px;}
+.skill-card::after{content:'';position:absolute;inset:0;background:linear-gradient(135deg,var(--glow),transparent);opacity:0;transition:opacity .4s}
+.skill-card:hover{border-color:var(--gold);transform:translateY(-6px); box-shadow: 0 20px 40px rgba(0,0,0,0.5);}
+.skill-card:hover::after{opacity:1}
+.skill-num{font-size:.63rem;letter-spacing:.15em;color:var(--border);margin-bottom:2rem; transition:color .3s}
+.skill-card:hover .skill-num{color:var(--gold)}
+.skill-ico{font-size:1.8rem;margin-bottom:1.2rem;display:block}
+.skill-ttl{font-family:'Playfair Display',serif;font-size:1.25rem;margin-bottom:.75rem; color:var(--text)}
+.skill-desc{color:var(--muted);font-size:.83rem;line-height:1.8}
+.skill-tags{display:flex;flex-wrap:wrap;gap:.4rem;margin-top:1.2rem}
+.skill-tag{font-size:.63rem;letter-spacing:.05em;color:var(--muted);border:1px solid var(--border);padding:.2rem .5rem; border-radius:3px;}
+
+/* PROJECTS */
+.projects-sec{padding:8rem 3.5rem}
+.proj-item{display:grid;grid-template-columns:1.1fr .9fr;gap:5rem;align-items:center;padding:5rem 0;border-bottom:1px solid var(--border)}
+.proj-item:first-of-type{border-top:1px solid var(--border)}
+.proj-item.rev{direction:rtl}
+.proj-item.rev>*{direction:ltr}
+.proj-num{font-family:'Playfair Display',serif;font-size:5rem;color:var(--border);line-height:1;margin-bottom:.5rem; transition: color 0.4s;}
+.proj-item:hover .proj-num{color: rgba(201,168,108,0.2);}
+.proj-plat{display:flex;gap:.5rem;flex-wrap:wrap;margin-bottom:1.5rem}
+.pbadge{font-size:.63rem;letter-spacing:.12em;text-transform:uppercase;padding:.25rem .6rem;border:1px solid var(--border);color:var(--muted); border-radius:3px;}
+.pbadge.g{border-color:var(--gold);color:var(--gold)}
+.proj-title{font-family:'Playfair Display',serif;font-size:clamp(2rem,3.5vw,3rem);line-height:1.1;margin-bottom:1.2rem}
+.proj-desc{color:var(--muted);font-size:.9rem;line-height:1.9;margin-bottom:1.5rem}
+.proj-feats{display:flex;flex-direction:column;gap:.5rem;margin-bottom:2rem}
+.proj-feat{display:flex;align-items:center;gap:.7rem;font-size:.8rem;color:var(--muted)}
+.proj-feat::before{content:'';width:5px;height:5px;border-radius:50%;background:var(--gold);flex-shrink:0}
+.proj-links{display:flex;gap:1rem;align-items:center;flex-wrap:wrap}
+.proj-visual{position:relative}
+.proj-img{aspect-ratio:16/10;overflow:hidden;border:1px solid var(--border);position:relative; border-radius: 6px; box-shadow: 0 10px 30px rgba(0,0,0,0.3); transition: border-color 0.4s;}
+.proj-item:hover .proj-img{border-color: rgba(201,168,108,0.4);}
+.proj-img img{width:100%;height:100%;object-fit:cover;transition:transform .8s ease,filter .6s ease;filter:saturate(.7) contrast(1.1)}
+.proj-img:hover img{transform:scale(1.06);filter:saturate(1) contrast(1)}
+.proj-img-overlay{position:absolute;inset:0;background:linear-gradient(to top,rgba(9,9,11,.8),transparent 60%);pointer-events:none}
+.proj-img-lbl{position:absolute;bottom:1.2rem;left:1.5rem;font-size:.63rem;letter-spacing:.15em;text-transform:uppercase;color:rgba(240,238,232,.7)}
+.proj-badge{position:absolute;top:-.8rem;right:-.8rem;background:var(--gold);color:#09090B;padding:.45rem .75rem;font-size:.63rem;font-weight:600;letter-spacing:.06em;text-align:center;z-index:2; border-radius:3px; box-shadow: 0 4px 15px rgba(201,168,108,0.3);}
+
+/* PROCESS */
+.process-sec{padding:6rem 3.5rem;background:var(--surface);border-top:1px solid var(--border);border-bottom:1px solid var(--border)}
+.process-grid{display:grid;grid-template-columns:repeat(4,1fr)}
+.process-step{padding:2.5rem 2rem;border-right:1px solid var(--border); transition: background 0.3s;}
+.process-step:hover{background: rgba(201,168,108,0.02);}
+.process-step:last-child{border-right:none}
+.pnum{font-family:'Playfair Display',serif;font-size:3.5rem;color:var(--border);line-height:1;margin-bottom:1.5rem; transition: color 0.3s;}
+.process-step:hover .pnum{color: var(--gold);}
+.pttl{font-size:.95rem; font-weight:600; letter-spacing:.05em;margin-bottom:.7rem;color:var(--text)}
+.pdesc{font-size:.8rem;color:var(--muted);line-height:1.75}
+
+/* CONTACT */
+.contact-sec{padding:10rem 3.5rem; position:relative; overflow:hidden;}
+.contact-glow{position:absolute;bottom:-10%;left:50%;transform:translateX(-50%);width:700px;height:400px;background:radial-gradient(ellipse,rgba(201,168,108,.08) 0%,transparent 70%);pointer-events:none; filter:blur(40px);}
+.contact-inner{max-width:900px;margin:0 auto;text-align:center; position:relative; z-index:1;}
+.contact-big{font-family:'Playfair Display',serif;font-size:clamp(3rem,6vw,5.5rem);line-height:1.05;margin-bottom:2rem}
+.contact-sub{color:var(--muted);font-size:.95rem;max-width:460px;margin:0 auto 3.5rem;line-height:1.85}
+.contact-email-wrap{margin-bottom:2.5rem}
+.contact-email{font-family:'Playfair Display',serif;font-size:clamp(1.3rem,2.5vw,2rem);color:var(--text);text-decoration:none;border-bottom:1px solid var(--gold);padding-bottom:4px;transition:all .3s}
+.contact-email:hover{color:var(--gold); border-bottom-color: transparent;}
+.cta-wrap{margin-bottom:4rem}
+.cinfo{display:flex;justify-content:center;gap:4rem}
+.cinfo-item{text-align:center}
+.cinfo-lbl{font-size:.63rem;letter-spacing:.16em;text-transform:uppercase;color:var(--muted);margin-bottom:.4rem}
+.cinfo-val{font-size:.85rem;color:var(--text)}
+
+footer{border-top:1px solid var(--border);padding:1.8rem 3.5rem;display:flex;justify-content:space-between;align-items:center;background:var(--surface)}
+.flogo{font-family:'Playfair Display',serif;font-size:.9rem;color:var(--muted)}
+.flogo span{color:var(--gold)}
+footer p{font-size:.7rem;color:var(--muted);letter-spacing:.04em}
+
+@keyframes fup{from{opacity:0;transform:translateY(28px)}to{opacity:1;transform:translateY(0)}}
+.fu{opacity:0;transform:translateY(28px);transition:opacity .8s ease-out,transform .8s ease-out}
+.fu.visible{opacity:1;transform:none}
+
+@media(max-width:960px){
+  nav{padding:1.2rem 1.5rem}
+  .nav-links, .nav-dot-wrap{display:none}
+  .nav-right { gap: 1rem; }
+  .hero,.about,.skills-sec,.projects-sec,.process-sec,.contact-sec{padding-left:1.5rem;padding-right:1.5rem}
+  .about{grid-template-columns:1fr;gap:3rem;padding-top:5rem;padding-bottom:5rem}
+  .skills-grid{grid-template-columns:1fr}
+  .proj-item{grid-template-columns:1fr;gap:2.5rem;padding:4rem 0}
+  .proj-item.rev{direction:ltr}
+  .process-grid{grid-template-columns:1fr 1fr}
+  .process-step{border-right:none; border-bottom:1px solid var(--border)}
+  .process-step:nth-child(odd){border-right:1px solid var(--border)}
+  .cinfo{flex-direction:column;gap:2rem}
+  footer{flex-direction:column;gap:.5rem;text-align:center;padding:1.5rem}
+}
+@media(max-width:600px){
+  .process-grid{grid-template-columns:1fr}
+  .process-step:nth-child(odd){border-right:none}
+}
+</style>
+</head>
+<!-- A classe lang-pt ou lang-en será definida via JS -->
+<body class="lang-pt">
+
+<div class="cursor" id="cursor"></div>
+<div class="cursor-ring" id="ring"></div>
+
+<nav id="nav">
+  <div class="nav-logo">Otávio <span>Bonatto</span></div>
+  <ul class="nav-links">
+    <li><a href="#about"><span class="en">About</span><span class="pt">Sobre</span></a></li>
+    <li><a href="#projects"><span class="en">Projects</span><span class="pt">Projetos</span></a></li>
+    <li><a href="#process"><span class="en">Process</span><span class="pt">Processo</span></a></li>
+    <li><a href="#contact"><span class="en">Contact</span><span class="pt">Contato</span></a></li>
+  </ul>
+  
+  <div class="nav-right">
+    <div class="nav-dot-wrap">
+      <span class="nav-dot"></span>
+      <span class="en">Available for projects</span>
+      <span class="pt">Disponível para projetos</span>
+    </div>
+    <button class="lang-toggle" id="lang-toggle" title="Change Language">
+      <span class="en-label">EN</span> <span>/</span> <span class="pt-label active">PT</span>
+    </button>
+  </div>
+</nav>
+
+<!-- HERO -->
+<section class="hero" id="about">
+  <div class="hero-grid"></div>
+  <div class="hero-glow"></div>
+  <div class="hero-content">
+    <div class="hero-eyebrow">
+      <div class="eyebrow-line"></div>
+      <span class="en">Full Stack Developer & Game Creator</span>
+      <span class="pt">Desenvolvedor Full Stack & Game Creator</span>
+    </div>
+    
+    <h1 class="en">Code that turns<br/><em>ideas</em> into<br/><span class="outline">reality</span></h1>
+    <h1 class="pt">Código que torna<br/><em>ideias</em> em<br/><span class="outline">realidade</span></h1>
+    
+    <p class="hero-sub en">Developer with experience in web development and games published worldwide. JavaScript, Unity, C# — from concept to final product.</p>
+    <p class="hero-sub pt">Desenvolvedor com experiência em criação web e jogos publicados mundialmente. JavaScript, Unity, C# — do conceito ao produto final.</p>
+    
+    <div class="hero-actions">
+      <a href="#contact" class="btn-primary">
+        <span class="en">Start a project</span><span class="pt">Iniciar projeto</span>
+        <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M1 7h12M7 1l6 6-6 6" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      </a>
+      <a href="#projects" class="btn-ghost">
+        <span class="en">See projects</span><span class="pt">Ver projetos</span>
+      </a>
+    </div>
+  </div>
+  <div class="hero-scroll">
+    <span class="en">Scroll</span><span class="pt">Rolar</span>
+    <div class="scroll-line"></div>
+  </div>
+</section>
+
+<!-- MARQUEE -->
+<div class="marquee-wrap">
+  <div class="marquee-inner">
+    <!-- Repetição de tecnologias (A maioria serve para ambos os idiomas) -->
+    <span><span class="en">Web Development</span><span class="pt">Desenvolvimento Web</span></span>
+    <span>Unity & C#</span><span>JavaScript</span><span>Indie Games</span><span>HTML & CSS</span>
+    <span>Game Design</span><span>Steam Publisher</span><span>Google Play</span>
+    <span><span class="en">Freelancer</span><span class="pt">Freelance</span></span>
+    <span>Full Stack</span>
+
+    <span><span class="en">Web Development</span><span class="pt">Desenvolvimento Web</span></span>
+    <span>Unity & C#</span><span>JavaScript</span><span>Indie Games</span><span>HTML & CSS</span>
+    <span>Game Design</span><span>Steam Publisher</span><span>Google Play</span>
+    <span><span class="en">Freelancer</span><span class="pt">Freelance</span></span>
+    <span>Full Stack</span>
+  </div>
+</div>
+
+<!-- ABOUT -->
+<section class="about fu">
+  <div class="about-glow"></div>
+  <div class="about-text">
+    <div class="slabel">
+      <span class="slabel-num">01</span><div class="slabel-line"></div>
+      <span class="slabel-text en">About me</span>
+      <span class="slabel-text pt">Sobre mim</span>
+    </div>
+    
+    <h2 class="stitle en">Building digital<br/>products with <em>purpose</em></h2>
+    <h2 class="stitle pt">Criando produtos<br/>digitais com <em>propósito</em></h2>
+    
+    <div class="en">
+      <p>Developer with solid experience in creating <strong>websites and web systems</strong>, having published games on global platforms like <strong>Steam</strong> and <strong>Google Play</strong> completely independently.</p>
+      <p>I work with attention to detail, delivering solutions that combine clean, functional code with a strong focus on the client's final result.</p>
+      <p>Available for <strong>freelance</strong> projects — from landing pages to complete robust systems.</p>
+    </div>
+    
+    <div class="pt">
+      <p>Desenvolvedor com sólida experiência em criação de <strong>sites e sistemas web</strong>, tendo publicado jogos em plataformas globais como a <strong>Steam</strong> e o <strong>Google Play</strong> de forma completamente independente.</p>
+      <p>Trabalho com atenção ao detalhe, entregando soluções que combinam código limpo e funcional com foco no resultado final do cliente.</p>
+      <p>Disponível para projetos <strong>freelancer</strong> — de landing pages a sistemas completos.</p>
+    </div>
+  </div>
+  
+  <div>
+    <div class="acard">
+      <div class="acard-label">
+        <span class="en">Career Summary</span><span class="pt">Resumo de carreira</span>
+      </div>
+      <div class="stats-grid">
+        <div>
+          <div class="stat-num">5<sup>+</sup></div>
+          <div class="stat-label en">Years of experience</div><div class="stat-label pt">Anos de experiência</div>
+        </div>
+        <div>
+          <div class="stat-num">3</div>
+          <div class="stat-label en">Published projects</div><div class="stat-label pt">Projetos publicados</div>
+        </div>
+        <div>
+          <div class="stat-num">2</div>
+          <div class="stat-label en">Global platforms</div><div class="stat-label pt">Plataformas globais</div>
+        </div>
+        <div>
+          <div class="stat-num">∞</div>
+          <div class="stat-label en">Coffee consumed</div><div class="stat-label pt">Café consumido</div>
+        </div>
+      </div>
+      <div class="adivider"></div>
+      <div class="tags">
+        <span class="tag">JavaScript</span><span class="tag">HTML/CSS</span><span class="tag">Unity</span><span class="tag">C#</span><span class="tag">Game Design</span><span class="tag">UI/UX</span><span class="tag">PHP</span><span class="tag">Node.js</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- SKILLS -->
+<section class="skills-sec fu">
+  <div class="slabel">
+    <span class="slabel-num">02</span><div class="slabel-line"></div>
+    <span class="slabel-text en">Skills</span><span class="slabel-text pt">Habilidades</span>
+  </div>
+  
+  <h2 class="stitle en">What I can <em>do</em><br/>for your project</h2>
+  <h2 class="stitle pt">O que posso <em>fazer</em><br/>pelo seu projeto</h2>
+  
+  <div class="skills-grid">
+    <div class="skill-card">
+      <div class="skill-num">001</div>
+      <span class="skill-ico">🌐</span>
+      <div class="skill-ttl">
+        <span class="en">Web Development</span><span class="pt">Desenvolvimento Web</span>
+      </div>
+      <p class="skill-desc en">Institutional websites, landing pages, and web systems focused on performance, conversion, and user experience.</p>
+      <p class="skill-desc pt">Sites institucionais, landing pages e sistemas web focados em performance, conversão e experiência do usuário.</p>
+      <div class="skill-tags"><span class="skill-tag">HTML</span><span class="skill-tag">CSS</span><span class="skill-tag">JavaScript</span><span class="skill-tag">PHP</span></div>
+    </div>
+    
+    <div class="skill-card">
+      <div class="skill-num">002</div>
+      <span class="skill-ico">🎮</span>
+      <div class="skill-ttl">
+        <span class="en">Game Development</span><span class="pt">Desenvolvimento de Jogos</span>
+      </div>
+      <p class="skill-desc en">End-to-end game development — from concept to final product published on platforms like Steam and Google Play.</p>
+      <p class="skill-desc pt">Desenvolvimento de jogos de ponta a ponta — do conceito ao produto final publicado em plataformas como Steam e Google Play.</p>
+      <div class="skill-tags"><span class="skill-tag">Unity</span><span class="skill-tag">C#</span><span class="skill-tag">Game Design</span><span class="skill-tag">Android</span></div>
+    </div>
+    
+    <div class="skill-card">
+      <div class="skill-num">003</div>
+      <span class="skill-ico">⚙️</span>
+      <div class="skill-ttl">
+        <span class="en">Systems & Automation</span><span class="pt">Sistemas e Automação</span>
+      </div>
+      <p class="skill-desc en">Custom robust systems, API integrations, and automations that save time and drastically reduce operational errors.</p>
+      <p class="skill-desc pt">Sistemas sob medida, integrações de APIs e automações que poupam tempo e reduzem erros operacionais na sua rotina.</p>
+      <div class="skill-tags"><span class="skill-tag">APIs</span><span class="skill-tag">Node.js</span><span class="skill-tag">Databases</span></div>
+    </div>
+  </div>
+</section>
+
+<!-- PROJECTS -->
+<section class="projects-sec fu" id="projects">
+  <div class="slabel">
+    <span class="slabel-num">03</span><div class="slabel-line"></div>
+    <span class="slabel-text en">Projects</span><span class="slabel-text pt">Projetos</span>
+  </div>
+  <h2 class="stitle en">Selected <em>works</em></h2>
+  <h2 class="stitle pt">Trabalhos <em>realizados</em></h2>
+
+  <!-- VAMP NIGHT -->
+  <div class="proj-item">
+    <div>
+      <div class="proj-num">01</div>
+      <div class="proj-plat"><span class="pbadge g">Steam</span><span class="pbadge">Unity</span><span class="pbadge">C#</span><span class="pbadge">Indie</span></div>
+      <h3 class="proj-title">Vamp Night</h3>
+      
+      <p class="proj-desc en">Indie simulation and action game published globally on Steam. The player takes on the role of a vampire who has just arrived in a new town, surviving while evading hunters.</p>
+      <p class="proj-desc pt">Jogo indie de simulação e ação publicado globalmente na Steam. O jogador assume o papel de um vampiro recém-chegado em uma nova cidade, sobrevivendo enquanto foge de caçadores.</p>
+      
+      <div class="proj-feats en">
+        <div class="proj-feat">Open world with free exploration</div>
+        <div class="proj-feat">Combat and hunting system</div>
+        <div class="proj-feat">House buying and decoration</div>
+        <div class="proj-feat">6 Steam achievements</div>
+        <div class="proj-feat">77% positive reviews</div>
+      </div>
+      <div class="proj-feats pt">
+        <div class="proj-feat">Mundo aberto com exploração livre</div>
+        <div class="proj-feat">Sistema de combate e caça</div>
+        <div class="proj-feat">Compra de casas e decoração</div>
+        <div class="proj-feat">6 conquistas na Steam</div>
+        <div class="proj-feat">77% de avaliações positivas</div>
+      </div>
+      
+      <div class="proj-links">
+        <a href="https://store.steampowered.com/app/1507740/Vamp_Night/" target="_blank" class="btn-primary">
+          <span class="en">View on Steam ↗</span><span class="pt">Ver na Steam ↗</span>
+        </a>
+      </div>
+    </div>
+    <div class="proj-visual">
+      <div class="proj-badge">
+        <span class="en">★★★★ 77% positive</span><span class="pt">★★★★ 77% positivas</span>
+      </div>
+      <div class="proj-img">
+        <img src="https://shared.fastly.steamstatic.com/store_item_assets/steam/apps/1507740/ss_dffc230d9f8066c6131940c2880467018ad8a5d5.1920x1080.jpg?t=1617163707" alt="Vamp Night"/>
+        <div class="proj-img-overlay"></div>
+        <div class="proj-img-lbl">Steam · <span class="en">Jan 2021</span><span class="pt">Jan 2021</span></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- MY POCKET FRIEND -->
+  <div class="proj-item rev">
+    <div>
+      <div class="proj-num">02</div>
+      <div class="proj-plat"><span class="pbadge g">Android</span><span class="pbadge">Unity</span><span class="pbadge">C#</span><span class="pbadge">Mobile</span></div>
+      <h3 class="proj-title">My Pocket Friend</h3>
+      
+      <p class="proj-desc en">Mobile pet simulation game published on Google Play. The player takes care of a virtual puppy — naming it, feeding it, playing with it, and tracking its growth.</p>
+      <p class="proj-desc pt">Jogo mobile de simulação de pet publicado no Google Play. O jogador cuida de um cachorrinho virtual — dando nome, alimentando, brincando e acompanhando seu crescimento.</p>
+      
+      <div class="proj-feats en">
+        <div class="proj-feat">Pet system with dynamic growth</div>
+        <div class="proj-feat">Memory mini-game</div>
+        <div class="proj-feat">Integrated endless runner</div>
+        <div class="proj-feat">Match-3 puzzle game</div>
+        <div class="proj-feat">Realistic graphics optimized for mobile</div>
+      </div>
+      <div class="proj-feats pt">
+        <div class="proj-feat">Sistema de pet com crescimento dinâmico</div>
+        <div class="proj-feat">Mini-game de memória</div>
+        <div class="proj-feat">Endless runner integrado</div>
+        <div class="proj-feat">Match-3 puzzle game</div>
+        <div class="proj-feat">Gráficos realistas para mobile</div>
+      </div>
+      
+      <div class="proj-links">
+        <a href="https://kiwilz.itch.io/my-pocket-friend" target="_blank" class="btn-primary">
+          <span class="en">View Project ↗</span><span class="pt">Ver projeto ↗</span>
+        </a>
+      </div>
+    </div>
+    <div class="proj-visual">
+      <div class="proj-img">
+        <img src="https://img.itch.zone/aW1hZ2UvODI4Nzk5LzQ2NDQ2ODIucG5n/original/kCexmi.png" alt="My Pocket Friend" style="object-fit:contain;background:#1a2035"/>
+        <div class="proj-img-overlay"></div>
+        <div class="proj-img-lbl">Android · Google Play</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SENTINEL CRYPTO -->
+  <div class="proj-item">
+    <div>
+      <div class="proj-num">03</div>
+      <div class="proj-plat"><span class="pbadge g">Web App</span><span class="pbadge">JavaScript</span><span class="pbadge">HTML/CSS</span><span class="pbadge">Crypto</span></div>
+      <h3 class="proj-title">Market Monitor Pro</h3>
+      
+      <p class="proj-desc en">Real-time crypto market analysis web tool. Monitors multiple pairs like BTC/USDT and ETH/USDT with advanced technical indicators and a signal alert system.</p>
+      <p class="proj-desc pt">Ferramenta web de análise de mercado cripto em tempo real. Monitora múltiplos pares como BTC/USDT e ETH/USDT com indicadores técnicos avançados e sistema de alertas de sinais.</p>
+      
+      <div class="proj-feats en">
+        <div class="proj-feat">Timeframe confluence (15m to 1W)</div>
+        <div class="proj-feat">RSI with divergence detection</div>
+        <div class="proj-feat">Real-time MACD and Supertrend status</div>
+        <div class="proj-feat">Funding rate and long/short monitoring</div>
+        <div class="proj-feat">Signal log with audio alerts</div>
+      </div>
+      <div class="proj-feats pt">
+        <div class="proj-feat">Confluência de timeframes (15m até 1W)</div>
+        <div class="proj-feat">RSI com detecção de divergências</div>
+        <div class="proj-feat">Status MACD e Supertrend em tempo real</div>
+        <div class="proj-feat">Monitoramento de funding rate e long/short</div>
+        <div class="proj-feat">Log de sinais com alertas sonoros</div>
+      </div>
+      
+      <div class="proj-links">
+        <a href="https://otaviobonatto.github.io/sentinel-crypto/" target="_blank" class="btn-primary">
+          <span class="en">Live Preview ↗</span><span class="pt">Ver ao vivo ↗</span>
+        </a>
+      </div>
+    </div>
+    <div class="proj-visual">
+      <div class="proj-img" style="background:linear-gradient(135deg,#040d17,#061428,#0a1f3a)">
+        <div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:1.5rem;padding:2rem">
+          <div style="display:flex;gap:1.5rem;align-items:flex-end">
+            <div style="display:flex;flex-direction:column;gap:4px">
+              <div style="width:28px;height:60px;background:linear-gradient(to top,#ef4444,#f87171);border-radius:2px 2px 0 0;opacity:0.9"></div>
+              <div style="width:28px;height:3px;background:#ef4444"></div>
+            </div>
+            <div style="display:flex;flex-direction:column;gap:4px">
+              <div style="width:28px;height:90px;background:linear-gradient(to top,#22c55e,#4ade80);border-radius:2px 2px 0 0"></div>
+              <div style="width:28px;height:3px;background:#22c55e"></div>
+            </div>
+            <div style="display:flex;flex-direction:column;gap:4px">
+              <div style="width:28px;height:45px;background:linear-gradient(to top,#ef4444,#f87171);border-radius:2px 2px 0 0;opacity:0.7"></div>
+              <div style="width:28px;height:3px;background:#ef4444"></div>
+            </div>
+            <div style="display:flex;flex-direction:column;gap:4px">
+              <div style="width:28px;height:110px;background:linear-gradient(to top,#22c55e,#4ade80);border-radius:2px 2px 0 0"></div>
+              <div style="width:28px;height:3px;background:#22c55e"></div>
+            </div>
+            <div style="display:flex;flex-direction:column;gap:4px">
+              <div style="width:28px;height:75px;background:linear-gradient(to top,#C9A86C,#E8C98A);border-radius:2px 2px 0 0"></div>
+              <div style="width:28px;height:3px;background:#C9A86C"></div>
+            </div>
+          </div>
+          <div style="font-size:0.68rem;letter-spacing:0.18em;text-transform:uppercase;color:rgba(201,168,108,0.6)">BTC/USDT · RSI · MACD</div>
+        </div>
+        <div class="proj-img-overlay"></div>
+        <div class="proj-img-lbl">Web App · <span class="en">Live</span><span class="pt">Ao vivo</span></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- PROCESS -->
+<section class="process-sec fu" id="process">
+  <div class="slabel">
+    <span class="slabel-num">04</span><div class="slabel-line"></div>
+    <span class="slabel-text en">How I work</span><span class="slabel-text pt">Como trabalho</span>
+  </div>
+  
+  <h2 class="stitle en"><em>Simple</em> process,<br/>guaranteed results</h2>
+  <h2 class="stitle pt">Processo <em>simples,</em><br/>resultado garantido</h2>
+  
+  <div class="process-grid">
+    <div class="process-step">
+      <div class="pnum">01</div>
+      <div class="pttl en">Briefing</div><div class="pttl pt">Briefing</div>
+      <p class="pdesc en">We understand together what you need, what the goal is, and the project timeline.</p>
+      <p class="pdesc pt">Entendemos juntos o que você precisa, qual o objetivo e o prazo do projeto.</p>
+    </div>
+    <div class="process-step">
+      <div class="pnum">02</div>
+      <div class="pttl en">Proposal</div><div class="pttl pt">Proposta</div>
+      <p class="pdesc en">I send a detailed proposal with scope, timeline, and value. No surprises.</p>
+      <p class="pdesc pt">Envio uma proposta detalhada com escopo, prazo e valor. Sem surpresas.</p>
+    </div>
+    <div class="process-step">
+      <div class="pnum">03</div>
+      <div class="pttl en">Development</div><div class="pttl pt">Desenvolvimento</div>
+      <p class="pdesc en">I code with frequent updates. You track the progress in real-time.</p>
+      <p class="pdesc pt">Codifico com atualizações frequentes. Você acompanha o progresso em tempo real.</p>
+    </div>
+    <div class="process-step">
+      <div class="pnum">04</div>
+      <div class="pttl en">Delivery</div><div class="pttl pt">Entrega</div>
+      <p class="pdesc en">I deliver the project, make the final adjustments, and ensure everything works perfectly.</p>
+      <p class="pdesc pt">Entrego o projeto, faço os ajustes finais e garanto que tudo funciona perfeitamente.</p>
+    </div>
+  </div>
+</section>
+
+<!-- CONTACT -->
+<section class="contact-sec fu" id="contact">
+  <div class="contact-glow"></div>
+  <div class="contact-inner">
+    <div class="slabel" style="justify-content:center">
+      <span class="slabel-num">05</span><div class="slabel-line"></div>
+      <span class="slabel-text en">Contact</span><span class="slabel-text pt">Contato</span>
+    </div>
+    
+    <h2 class="contact-big en">Let's build something<br/><em>amazing</em> together?</h2>
+    <h2 class="contact-big pt">Vamos criar algo<br/><em>incrível</em> juntos?</h2>
+    
+    <p class="contact-sub en">I am available for freelance projects. Tell me what you need and I'll respond within 24 hours.</p>
+    <p class="contact-sub pt">Estou disponível para projetos freelancer. Me conta o que você precisa e respondo em até 24 horas.</p>
+    
+    <div class="contact-email-wrap">
+      <a href="mailto:seuemail@email.com" class="contact-email">otaviobonatto92@gmail.com</a>
+    </div>
+    
+    <div class="cta-wrap" style="margin-bottom:3.5rem">
+      <a href="mailto:otaviobonatto92@gmail.com" class="btn-primary">
+        <span class="en">Send message</span><span class="pt">Enviar mensagem</span>
+        <span>→</span>
+      </a>
+    </div>
+    
+    <div class="cinfo">
+      <div class="cinfo-item">
+        <div class="cinfo-lbl en">Location</div><div class="cinfo-lbl pt">Localização</div>
+        <div class="cinfo-val en">Brazil · Remote</div><div class="cinfo-val pt">Brasil · Remoto</div>
+      </div>
+      <div class="cinfo-item">
+        <div class="cinfo-lbl en">Availability</div><div class="cinfo-lbl pt">Disponibilidade</div>
+        <div class="cinfo-val en">Open to projects</div><div class="cinfo-val pt">Aberto a projetos</div>
+      </div>
+      <div class="cinfo-item">
+        <div class="cinfo-lbl en">Response time</div><div class="cinfo-lbl pt">Resposta</div>
+        <div class="cinfo-val en">Within 24 hours</div><div class="cinfo-val pt">Até 24 horas</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <div class="flogo">Otávio <span>Bonatto</span></div>
+  <p>© 2026 — Full Stack Developer & Game Creator</p>
+</footer>
+
+<script>
+// Lógica do Cursor Customizado
+const cursor = document.getElementById('cursor'), ring = document.getElementById('ring');
+let mx=0, my=0, rx=0, ry=0;
+document.addEventListener('mousemove', e => { mx=e.clientX; my=e.clientY; cursor.style.left=mx+'px'; cursor.style.top=my+'px' });
+(function tick(){ rx+=(mx-rx)*.12; ry+=(my-ry)*.12; ring.style.left=rx+'px'; ring.style.top=ry+'px'; requestAnimationFrame(tick) })();
+
+document.querySelectorAll('a, button, .skill-card, .tag, .acard, .proj-img').forEach(el => {
+  el.addEventListener('mouseenter', () => { 
+    cursor.style.transform = 'translate(-50%, -50%) scale(1.5)';
+    cursor.style.backgroundColor = 'transparent';
+    cursor.style.border = '1px solid var(--gold)';
+    ring.style.width = '54px'; 
+    ring.style.height = '54px'; 
+    ring.style.borderColor = 'var(--gold)';
+  });
+  el.addEventListener('mouseleave', () => { 
+    cursor.style.transform = 'translate(-50%, -50%) scale(1)';
+    cursor.style.backgroundColor = 'var(--gold)';
+    cursor.style.border = 'none';
+    ring.style.width = '36px'; 
+    ring.style.height = '36px'; 
+    ring.style.borderColor = 'rgba(201,168,108,0.4)';
+  });
+});
+
+// NavBar e Animações de Scroll
+window.addEventListener('scroll', () => document.getElementById('nav').classList.toggle('scrolled', scrollY > 60));
+const obs = new IntersectionObserver(e => e.forEach(x => { if(x.isIntersecting) x.target.classList.add('visible') }), { threshold: .07 });
+document.querySelectorAll('.fu').forEach(el => obs.observe(el));
+
+// ---- SISTEMA DE IDIOMAS (LANGUAGE TOGGLE) ----
+const langToggle = document.getElementById('lang-toggle');
+const body = document.body;
+const enLabel = document.querySelector('.en-label');
+const ptLabel = document.querySelector('.pt-label');
+
+// Pega a preferência salva ou define 'pt' como padrão
+const savedLang = localStorage.getItem('portfolio-lang') || 'pt';
+setLanguage(savedLang);
+
+langToggle.addEventListener('click', () => {
+  const currentLang = body.classList.contains('lang-en') ? 'en' : 'pt';
+  const newLang = currentLang === 'en' ? 'pt' : 'en';
+  setLanguage(newLang);
+});
+
+function setLanguage(lang) {
+  if (lang === 'en') {
+    body.classList.remove('lang-pt');
+    body.classList.add('lang-en');
+    enLabel.classList.add('active');
+    ptLabel.classList.remove('active');
+  } else {
+    body.classList.remove('lang-en');
+    body.classList.add('lang-pt');
+    ptLabel.classList.add('active');
+    enLabel.classList.remove('active');
+  }
+  localStorage.setItem('portfolio-lang', lang);
+}
+</script>
+</body>
+</html>
